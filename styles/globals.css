@@ -1,26 +1,246 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ── CSS Variables ─────────────────────────────────────────────────
+   These drive every light/dark color on the page.
+   data-theme is toggled on <html> by the Navbar theme button.
+──────────────────────────────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  --bg:           #ffffff;
+  --bg-muted:     #F8FAFC;
+  --bg-card:      #ffffff;
+  --border:       #E5E7EB;
+  --text:         #0F2137;
+  --text-muted:   #64748B;
+  --text-faint:   #9CA3AF;
+  --amber:        #F59E0B;
+  --amber-hover:  #D97706;
+  --success:      #059669;
+  --success-bg:   #ECFDF5;
+  --success-border: #A7F3D0;
+  --danger:       #DC2626;
+  color-scheme: light;
+
+  /* Hero (theme-adaptive) */
+  --hero-bg:            #ffffff;
+  --hero-img-opacity:   0.06;
+  --hero-grid:          rgba(15,33,55,0.045);
+  --hero-heading:       #0F2137;
+  --hero-para:          #64748B;
+  --hero-btn2-bg:       #ffffff;
+  --hero-btn2-text:     #0F2137;
+  --hero-btn2-border:   #D1D5DB;
+  --hero-card-bg:       #ffffff;
+  --hero-card-border:   #E5E7EB;
+  --hero-card-text:     #0F2137;
+  --hero-card-sub:      #64748B;
+  --hero-overlay-bg:        rgba(255,255,255,0.92);
+  --hero-overlay-border:    rgba(15,33,55,0.08);
+  --hero-overlay-text:      #0F2137;
+  --hero-overlay-sub:       #64748B;
+  --hero-overlay-track:     rgba(15,33,55,0.08);
+  --hero-overlay-gradient:  linear-gradient(to top, rgba(255,255,255,0.95), transparent);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-theme="dark"] {
+  --bg:           #0A1929;
+  --bg-muted:     #0F2137;
+  --bg-card:      #1E293B;
+  --border:       #1E3A5F;
+  --text:         #F1F5F9;
+  --text-muted:   #94A3B8;
+  --text-faint:   #475569;
+  --amber:        #F59E0B;
+  --amber-hover:  #FBBF24;
+  --success:      #34D399;
+  --success-bg:   rgba(5,150,105,0.15);
+  --success-border: rgba(52,211,153,0.3);
+  --danger:       #F87171;
+  color-scheme: dark;
+
+  /* Hero (theme-adaptive) */
+  --hero-bg:            #060E18;
+  --hero-img-opacity:   0.08;
+  --hero-grid:          rgba(255,255,255,0.018);
+  --hero-heading:       #F1F5F9;
+  --hero-para:          #64748B;
+  --hero-btn2-bg:       rgba(255,255,255,0.06);
+  --hero-btn2-text:     #E2E8F0;
+  --hero-btn2-border:   rgba(255,255,255,0.12);
+  --hero-card-bg:       rgba(15,33,55,0.95);
+  --hero-card-border:   rgba(255,255,255,0.1);
+  --hero-card-text:     #ffffff;
+  --hero-card-sub:      #94A3B8;
+  --hero-overlay-bg:        rgba(10,25,41,0.88);
+  --hero-overlay-border:    rgba(255,255,255,0.08);
+  --hero-overlay-text:      #ffffff;
+  --hero-overlay-sub:       #64748B;
+  --hero-overlay-track:     rgba(255,255,255,0.1);
+  --hero-overlay-gradient:  linear-gradient(to top, rgba(10,25,41,0.96), transparent);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ── Base ─────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-manrope), 'Manrope', system-ui, sans-serif;
+    transition: background 0.25s, color 0.25s;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-sora), 'Sora', var(--font-manrope), system-ui, sans-serif;
+  }
+  * {
+    box-sizing: border-box;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Components ───────────────────────────────────────────────────── */
+@layer components {
+
+  .btn-primary {
+    background-color: var(--amber);
+    color: #0F2137;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    opacity: 1;
+    visibility: visible;
+  }
+  .btn-primary:hover  { background-color: var(--amber-hover); color: #0F2137; }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    background-color: var(--bg-card);
+    color: var(--text);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1.5px solid var(--border);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    opacity: 1;
+    visibility: visible;
+  }
+  .btn-secondary:hover { background-color: var(--bg-muted); }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--text);
+    font-weight: 600;
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-ghost:hover { border-color: var(--text-muted); background: var(--bg-muted); }
+
+  .btn-white {
+    background-color: var(--hero-btn2-bg);
+    color: var(--hero-btn2-text);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--hero-btn2-border);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    opacity: 1;
+    visibility: visible;
+  }
+  .btn-white:hover { background-color: var(--hero-btn2-bg); filter: brightness(0.95); }
+
+  .card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: background 0.25s, border-color 0.25s;
+  }
+
+  .input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-family: var(--font-manrope), 'Manrope', system-ui, sans-serif;
+    transition: all 0.15s;
+    background: var(--bg-card);
+    color: var(--text);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+  }
+  .input::placeholder { color: var(--text-faint); }
+
+  /* Amber eyebrow label above section headings */
+  .eyebrow {
+    color: var(--amber);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Status badges */
+  .badge-new          { background: #fee2e2; color: #b91c1c; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 9999px; display: inline-block; }
+  .badge-under_review { background: #fef3c7; color: #92400e; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 9999px; display: inline-block; }
+  .badge-assigned     { background: #dbeafe; color: #1d4ed8; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 9999px; display: inline-block; }
+  .badge-resolved     { background: #dcfce7; color: #15803d; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 9999px; display: inline-block; }
+  .badge-high         { background: #fee2e2; color: #b91c1c; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 9999px; display: inline-block; }
+  .badge-medium       { background: #fef3c7; color: #92400e; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 9999px; display: inline-block; }
+  .badge-low          { background: #dcfce7; color: #15803d; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 9999px; display: inline-block; }
+
+  /* Admin sidebar links */
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #94A3B8;
+    transition: all 0.15s;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .sidebar-link:hover  { background: rgba(255,255,255,0.06); color: #ffffff; }
+  .sidebar-link.active { background: rgba(245,158,11,0.15);  color: #F59E0B; }
+
+  /* Hero layout helpers (used by the landing + about heroes) */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  .hero-right { display: none; }
+  @media (min-width: 1024px) {
+    .hero-grid { grid-template-columns: 1fr 1fr; }
+    .hero-right { display: block; }
+  }
 }

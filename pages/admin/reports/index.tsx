@@ -1,6 +1,8 @@
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 interface Report {
   reportId: string; damageType: string; severity: string; status: string
@@ -23,6 +25,10 @@ export default function ReportsListPage() {
   const [severity, setSeverity] = useState('all')
   const [search, setSearch] = useState('')
 
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const router = useRouter()
+
   const load = useCallback(async (pg = 1) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(pg), limit: '20', status, damageType, severity })
@@ -35,6 +41,24 @@ export default function ReportsListPage() {
     setPages(data.pages || 1)
     setLoading(false)
   }, [status, damageType, severity, search])
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/reports/${deleteTarget}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+      setDeleteTarget(null)
+      // Remove from local list instantly, then reload
+      setReports(prev => prev.filter(r => r.reportId !== deleteTarget))
+      setTotal(prev => prev - 1)
+    } catch {
+      // toast is not imported yet in this file — add the import or use alert
+      alert('Failed to delete report')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   useEffect(() => { load(1) }, [load])
 
@@ -116,8 +140,31 @@ export default function ReportsListPage() {
                     <td className="px-4 py-3 text-gray-600">{(r.confidence * 100).toFixed(0)}%</td>
                     <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{r.latitude.toFixed(3)}° N</td>
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{new Date(r.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/reports/${r.reportId}`} className="text-blue-600 hover:text-blue-800 text-xs font-medium">View →</Link>
+                    <td style={{ padding: '0.75rem 1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Link
+                          href={`/admin/reports/${r.reportId}`}
+                          style={{ color: '#F59E0B', fontWeight: 600, textDecoration: 'none', fontSize: '0.75rem' }}
+                        >
+                          View →
+                        </Link>
+                        <button
+                          onClick={() => setDeleteTarget(r.reportId)}
+                          title="Delete report"
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: '#94A3B8', display: 'flex', alignItems: 'center',
+                            padding: '0.2rem', borderRadius: 4,
+                            transition: 'color 0.15s',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.color = '#DC2626')}
+                          onMouseLeave={e => (e.currentTarget.style.color = '#94A3B8')}
+                        >
+                          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -137,6 +184,15 @@ export default function ReportsListPage() {
           )}
         </div>
       </div>
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete this report?"
+        message={`Report ${deleteTarget} will be permanently removed. This cannot be undone.`}
+        confirmLabel="Yes, Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </AdminLayout>
   )
 }

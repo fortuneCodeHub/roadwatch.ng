@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { connectDB } from '@/lib/mongodb'
 import Report from '@/models/Report'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/router'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 const ReportMap = dynamic(() => import('@/components/admin/ReportMap'), { ssr: false })
 
@@ -27,6 +29,10 @@ export default function ReportDetailPage({ report: initial }: { report: ReportDa
   const [notes, setNotes] = useState(initial.reviewerNotes || '')
   const [saving, setSaving] = useState(false)
 
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const router = useRouter()
+
   const save = async () => {
     setSaving(true)
     try {
@@ -46,21 +52,63 @@ export default function ReportDetailPage({ report: initial }: { report: ReportDa
     }
   }
 
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/reports/${report.reportId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+      toast.success('Report deleted')
+      router.push('/admin/reports')
+    } catch {
+      toast.error('Failed to delete report')
+      setDeleting(false)
+      setShowDeleteModal(false)
+    }
+  }
+
   const severityColor = { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' }[report.severity] || ''
 
   return (
     <AdminLayout title={`${report.reportId} — RoadWatch Admin`}>
       <div className="max-w-5xl space-y-6">
         {/* Header */}
-        <div className="flex items-start gap-4">
-          <Link href="/admin/reports" className="text-gray-400 hover:text-gray-600 mt-1">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-gray-900 font-mono">{report.reportId}</h1>
-            <p className="text-sm text-gray-500">Submitted {new Date(report.createdAt).toLocaleString('en-NG')}</p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+            <Link href="/admin/reports" style={{ color: '#94A3B8', marginTop: 2, display: 'flex' }}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+            <div>
+              <h1 style={{ color: '#0F2137', fontWeight: 800, fontSize: '1.2rem', fontFamily: 'monospace' }}>
+                {report.reportId}
+              </h1>
+              <p style={{ color: 'var(--text-muted, #64748B)', fontSize: '0.8rem', marginTop: 2 }}>
+                Submitted {new Date(report.createdAt).toLocaleString('en-NG')}
+              </p>
+            </div>
+            <span className={`badge-${report.status} text-sm px-3 py-1`}>{statusLabels[report.status]}</span>
           </div>
-          <span className={`badge-${report.status} text-sm px-3 py-1`}>{statusLabels[report.status]}</span>
+
+          {/* Delete button */}
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.55rem 1rem',
+              background: '#FEE2E2', color: '#DC2626',
+              border: '1px solid #FECACA', borderRadius: 8,
+              fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#DC2626'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#FEE2E2'; (e.currentTarget as HTMLButtonElement).style.color = '#DC2626' }}
+          >
+            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete Report
+          </button>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -194,6 +242,15 @@ export default function ReportDetailPage({ report: initial }: { report: ReportDa
           </div>
         </div>
       </div>
+      <ConfirmModal
+        open={showDeleteModal}
+        title="Delete this report?"
+        message={`Report ${report.reportId} will be permanently removed from the database. This action cannot be undone.`}
+        confirmLabel="Yes, Delete Report"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </AdminLayout>
   )
 }

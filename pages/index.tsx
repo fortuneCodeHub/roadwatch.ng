@@ -178,7 +178,7 @@ export default function HomePage() {
       >
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=80"
+            src="https://cdn.vanguardngr.com/wp-content/uploads/2022/12/Kabba-lokoja-960x620-bad-federal-road.jpg"
             alt="Nigerian road"
             fill
             className="object-cover"
@@ -252,7 +252,7 @@ export default function HomePage() {
                 transition: 'border-color 0.25s',
               }}>
                 <Image
-                  src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800&q=80"
+                  src="https://cdn.businessday.ng/2022/04/Bad-road-1.png"
                   alt="Road damage detected by AI"
                   fill
                   className="object-cover"
@@ -394,7 +394,7 @@ export default function HomePage() {
 
             <div className="relative h-80 lg:h-[480px] rounded-2xl overflow-hidden shadow-xl">
               <Image
-                src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800&q=80"
+                src="https://cdn.vanguardngr.com/wp-content/uploads/2022/12/Kabba-lokoja-960x620-bad-federal-road.jpg"
                 alt="Road damage example"
                 fill
                 className="object-cover"

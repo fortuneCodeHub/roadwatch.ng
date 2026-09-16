@@ -1,7 +1,8 @@
 import type { AppProps } from 'next/app'
-import { Sora, Manrope } from 'next/font/google'
 import '@/styles/globals.css'
 import { Toaster } from 'react-hot-toast'
+import { Manrope } from 'next/font/google'
+import { Sora } from 'next/font/google'
 
 // Display font for headings — geometric, modern, distinctive
 const sora = Sora({

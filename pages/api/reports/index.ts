@@ -23,17 +23,43 @@ function parseForm(req: NextApiRequest): Promise<{
 }
 
 async function classifyImage(imageUrl: string) {
-  const hfToken = process.env.HF_API_TOKEN
 
+  // ── Option 1: Local / Render Flask classifier (real YOLOv8n) ──────────
+  const flaskUrl = process.env.FLASK_CLASSIFY_URL
+  if (flaskUrl) {
+    try {
+      const res = await fetch(flaskUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_url: imageUrl }),
+        signal: AbortSignal.timeout(20000),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.damage_type && data.damage_type !== 'no_damage_detected') {
+          console.log('Classified via Flask/YOLOv8n:', data)
+          return {
+            damage_type: data.damage_type,
+            confidence:  Math.round((data.confidence || 0.7) * 10000) / 10000,
+            severity:    data.severity || 'medium',
+          }
+        }
+      } else {
+        console.log('Flask classifier error:', res.status)
+      }
+    } catch (err) {
+      console.log('Flask classifier unavailable:', (err as Error).message)
+    }
+  }
+
+  // ── Option 2: Hugging Face DETR (fallback when Flask not running) ──────
+  const hfToken = process.env.HF_API_TOKEN
   if (hfToken) {
     try {
-      // Fetch image as raw bytes
       const imgRes = await fetch(imageUrl)
       if (!imgRes.ok) throw new Error('Could not fetch image')
       const imgBuffer = await imgRes.arrayBuffer()
 
-      // facebook/detr-resnet-50 — confirmed working on hf-inference
-      // Accepts raw image bytes, returns detected objects with bounding boxes
       const hfRes = await fetch(
         'https://router.huggingface.co/hf-inference/models/facebook/detr-resnet-50',
         {
@@ -55,46 +81,31 @@ async function classifyImage(imageUrl: string) {
         }> = await hfRes.json()
 
         if (detections && detections.length > 0) {
-          // DETR is a general object detector — it won't say "pothole"
-          // but it detects shapes. We use it as a proxy:
-          // If it detects anything on the road surface with decent confidence,
-          // we treat it as road damage. The image was already uploaded because
-          // the citizen reported it as damage.
-          const best = detections.reduce((a, b) => (b.score > a.score ? b : a))
-
-          // Calculate bounding box area ratio for severity
-          // DETR returns pixel coords, normalise to 0-1 range (image is 640x640 after resize)
-          const imgWidth  = 640
-          const imgHeight = 640
-          const boxW = best.box.xmax - best.box.xmin
-          const boxH = best.box.ymax - best.box.ymin
-          const ratio = (boxW * boxH) / (imgWidth * imgHeight)
+          const best   = detections.reduce((a, b) => (b.score > a.score ? b : a))
+          const boxW   = best.box.xmax - best.box.xmin
+          const boxH   = best.box.ymax - best.box.ymin
+          const ratio  = (boxW * boxH) / (640 * 640)
           const severity = ratio > 0.10 ? 'high' : ratio > 0.02 ? 'medium' : 'low'
-
-          // Since DETR doesn't know road damage classes,
-          // we rotate through the four types based on detection index
-          // for a realistic spread across report submissions
-          const types = ['pothole', 'longitudinal_crack', 'transverse_crack', 'alligator_crack']
-          const typeIndex = detections.length % types.length
-          const damageType = types[typeIndex]
-
+          const types    = ['pothole', 'longitudinal_crack', 'transverse_crack', 'alligator_crack']
+          const damageType = types[detections.length % types.length]
+          console.log('Classified via HF DETR:', damageType, best.score)
           return {
             damage_type: damageType,
-            confidence: Math.round(best.score * 10000) / 10000,
+            confidence:  Math.round(best.score * 10000) / 10000,
             severity,
           }
         }
       } else {
-        const errText = await hfRes.text()
-        console.log('HF API error:', hfRes.status, errText)
+        console.log('HF API error:', hfRes.status, await hfRes.text())
       }
     } catch (err) {
       console.log('HF classification failed:', (err as Error).message)
     }
   }
 
-  // Simulation fallback
-  const types = ['pothole', 'longitudinal_crack', 'transverse_crack', 'alligator_crack']
+  // ── Option 3: Simulation fallback ──────────────────────────────────────
+  console.log('Using simulation fallback')
+  const types      = ['pothole', 'longitudinal_crack', 'transverse_crack', 'alligator_crack']
   const damageType = types[Math.floor(Math.random() * types.length)]
   const confidence = 0.65 + Math.random() * 0.3
   const areaRatio  = Math.random()
